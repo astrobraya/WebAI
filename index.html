@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web AI — Assistente Multimodal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-wrapper">
+
+        <!-- Cabeçalho da aplicação -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🤖</span>
+                    <span class="logo-text">Web AI</span>
+                </div>
+                <p class="header-subtitle">Assistente Inteligente Multimodal</p>
+            </div>
+        </header>
+
+        <!-- Conteúdo principal -->
+        <main class="main-content">
+            <form id="question-form" class="chat-form" novalidate>
+
+                <!-- Seção de parâmetros do modelo -->
+                <section class="section-card" aria-labelledby="params-heading">
+                    <h2 class="section-title" id="params-heading">
+                        <span class="section-icon">⚙️</span>
+                        Configurações do Modelo
+                    </h2>
+
+                    <div class="parameters">
+                        <div class="param-group">
+                            <label for="temperature">
+                                Temperatura
+                                <span class="value-badge" id="temp-value" aria-live="polite"></span>
+                            </label>
+                            <input type="range" id="temperature" name="temperature" step="0.1"
+                                aria-describedby="temp-desc">
+                            <p class="param-description" id="temp-desc">
+                                Controla a criatividade das respostas — valores baixos geram respostas mais precisas;
+                                valores altos tornam a IA mais criativa e variada.
+                            </p>
+                        </div>
+
+                        <div class="param-group">
+                            <label for="topK">
+                                Top K
+                                <span class="value-badge" id="topk-value" aria-live="polite"></span>
+                            </label>
+                            <input type="number" id="topK" name="topK" aria-describedby="topk-desc">
+                            <p class="param-description" id="topk-desc">
+                                Define quantas palavras candidatas são consideradas em cada etapa — valores menores
+                                resultam em respostas mais diretas e previsíveis.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Seção de upload de arquivo -->
+                <section class="section-card" aria-labelledby="upload-heading">
+                    <h2 class="section-title" id="upload-heading">
+                        <span class="section-icon">📎</span>
+                        Anexar Arquivo
+                    </h2>
+                    <p class="section-subtitle">Envie uma imagem ou áudio em inglês para análise</p>
+
+                    <div class="file-input-wrapper">
+                        <input type="file" id="file-input" accept="image/*,audio/*" hidden
+                            aria-label="Selecionar imagem ou áudio">
+                        <button type="button" class="btn btn-upload" id="file-upload-btn"
+                            aria-controls="file-preview">
+                            <span class="btn-icon">📁</span>
+                            <span>Escolher arquivo</span>
+                        </button>
+                        <span class="file-selected-name" id="file-selected-name" aria-live="polite"></span>
+                    </div>
+
+                    <div class="file-preview" id="file-preview" role="region"
+                        aria-label="Pré-visualização do arquivo"></div>
+                </section>
+
+                <!-- Seção de pergunta -->
+                <section class="section-card" aria-labelledby="question-heading">
+                    <h2 class="section-title" id="question-heading">
+                        <span class="section-icon">💬</span>
+                        Sua Mensagem
+                    </h2>
+
+                    <label for="question" class="sr-only">Digite sua pergunta</label>
+                    <textarea
+                        id="question"
+                        name="question"
+                        placeholder="Ex.: Descreva o que você vê nesta imagem... ou faça qualquer pergunta."
+                        rows="4"
+                        aria-required="true"
+                    ></textarea>
+
+                    <button type="submit" id="ask-button" class="btn btn-primary">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-label">Enviar pergunta</span>
+                    </button>
+                </section>
+
+            </form>
+
+            <!-- Área de resposta da IA -->
+            <section class="response-section" aria-live="polite" aria-atomic="false">
+                <div id="output" class="output-box" role="status"></div>
+            </section>
+        </main>
+
+        <!-- Rodapé -->
+        <footer class="app-footer">
+            <p>Brayan Lazarino &mdash; Projeto de Estudo em Engenharia de Software com IA Aplicada &mdash; <span id="year"></span></p>
+        </footer>
+    </div>
+
+    <script type="module" src="./index.js"></script>
+</body>
+
+</html>
