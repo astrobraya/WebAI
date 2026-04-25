@@ -96,7 +96,7 @@ Fluxo principal da aplicacao:
 
 ### 1) Clonar o repositorio
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/astrobraya/WebAI.git
 cd WebAI
 ```
 
