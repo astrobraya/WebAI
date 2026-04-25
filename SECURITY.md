@@ -18,7 +18,6 @@ Nao publique exploracoes com detalhes sensiveis antes da correcao.
 
 - Nenhuma chave de API hardcoded no codigo
 - Dependencias auditadas com npm audit
-- Padrao de variaveis de ambiente com .env.example
 - Exclusao de artefatos locais via .gitignore
 - Publicacao no npm desativada por default com "private": true
 
