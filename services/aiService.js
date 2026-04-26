@@ -132,6 +132,38 @@ export class AIService {
     }
 
     /**
+     * Retorna o system prompt de acordo com o modo de resposta selecionado.
+     *
+     * @param {'objective' | 'research'} mode
+     * @returns {string}
+     */
+    #buildSystemPrompt(mode) {
+        const languageInstruction =
+            'Always respond in Brazilian Portuguese (pt-BR) by default. ' +
+            'If the user explicitly requests a response in English or another language, prioritize that language instead.';
+
+        if (mode === 'research') {
+            return (
+                'You are an in-depth research assistant. ' +
+                'Always respond using rich Markdown formatting: use headings (##, ###), ' +
+                'bullet lists, numbered lists, **bold**, *italic*, tables, and fenced code blocks where appropriate. ' +
+                'Provide comprehensive, well-structured, and descriptive responses that cover ' +
+                'multiple perspectives, context, examples, and technical details. ' +
+                languageInstruction
+            );
+        }
+
+        // default: 'objective'
+        return (
+            'You are a clear and objective AI assistant. ' +
+            'Always respond using Markdown formatting: use **bold**, *italic*, ' +
+            'bullet lists, numbered lists, headings, and fenced code blocks where appropriate. ' +
+            'Be concise and direct — avoid unnecessary verbosity. ' +
+            languageInstruction
+        );
+    }
+
+    /**
      * Cria uma sessão de IA e transmite a resposta via streaming (generator assíncrono).
      * Suporta entradas multimodais: texto, imagem e áudio.
      *
@@ -139,9 +171,10 @@ export class AIService {
      * @param {number} temperature - Grau de criatividade das respostas
      * @param {number} topK - Número de candidatos considerados por token
      * @param {File | null} file - Arquivo opcional (imagem ou áudio)
+     * @param {'objective' | 'research'} responseMode - Modo de resposta da IA
      * @yields {string} Fragmentos (chunks) da resposta gerada
      */
-    async* createSession(question, temperature, topK, file = null) {
+    async* createSession(question, temperature, topK, file = null, responseMode = 'objective') {
         // Cancela qualquer request anterior antes de iniciar um novo
         this.abortController?.abort();
         this.abortController = new AbortController();
@@ -154,17 +187,17 @@ export class AIService {
         // Cria nova sessão com os parâmetros e modalidades configurados
         this.session = await this.languageModel.create({
             expectedInputs: [
-                { type: "text",  languages: ["en"] },
+                { type: "text" },
                 { type: "audio" },
                 { type: "image" },
             ],
-            expectedOutputs: [{ type: "text", languages: ["en"] }],
+            expectedOutputs: [{ type: "text" }],
             temperature,
             topK,
             initialPrompts: [
                 {
                     role: 'system',
-                    content: 'You are a clear and objective AI assistant. Always respond in plain text, without markdown formatting.'
+                    content: this.#buildSystemPrompt(responseMode),
                 },
             ],
         });
@@ -191,6 +224,66 @@ export class AIService {
 
         for await (const chunk of responseStream) {
             // Interrompe a iteração se o usuário cancelou a geração
+            if (this.abortController.signal.aborted) break;
+            yield chunk;
+        }
+    }
+
+    /**
+     * Cria uma sessão de IA com áudio capturado pelo microfone como entrada.
+     *
+     * @param {Blob} audioBlob - Áudio gravado pelo microfone
+     * @param {number} temperature
+     * @param {number} topK
+     * @param {'objective' | 'research'} responseMode
+     * @yields {string} Fragmentos da resposta gerada
+     */
+    async* createMicSession(audioBlob, temperature, topK, responseMode = 'objective') {
+        this.abortController?.abort();
+        this.abortController = new AbortController();
+
+        if (this.session) {
+            this.session.destroy();
+        }
+
+        this.session = await this.languageModel.create({
+            expectedInputs: [
+                { type: "text" },
+                { type: "audio" },
+            ],
+            expectedOutputs: [{ type: "text" }],
+            temperature,
+            topK,
+            initialPrompts: [
+                {
+                    role: 'system',
+                    content: this.#buildSystemPrompt(responseMode),
+                },
+            ],
+        });
+
+        const contentArray = [
+            { type: "audio", value: audioBlob },
+            {
+                type: "text",
+                value:
+                    'This audio may contain background noise, long pauses, hesitations, or natural speech imperfections. ' +
+                    'Please do the following in your response, using Markdown formatting:\n\n' +
+                    '## 🎙️ Transcrição\n' +
+                    'Transcribe and reorganize the audio content into a clear, concise summary of what was requested or described. ' +
+                    'Correct obvious speech errors and remove filler words, keeping the intent intact. ' +
+                    'If the audio is unclear or empty, state that briefly.\n\n' +
+                    '## 💬 Resposta\n' +
+                    'Now respond to the request identified in the audio, following the system instructions.',
+            },
+        ];
+
+        const responseStream = await this.session.promptStreaming(
+            [{ role: 'user', content: contentArray }],
+            { signal: this.abortController.signal }
+        );
+
+        for await (const chunk of responseStream) {
             if (this.abortController.signal.aborted) break;
             yield chunk;
         }

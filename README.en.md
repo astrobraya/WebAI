@@ -29,8 +29,9 @@ Applied AI study web app with multimodal support (text, image, and audio), using
 | Item | Description |
 | --- | --- |
 | Goal | Demonstrate browser-based AI without a dedicated backend |
-| Input | Text, image, and audio |
-| Output | Streaming response + Portuguese translation |
+| Input | Text, image, audio (file) and microphone (live capture) |
+| Output | Streaming response with Markdown formatting + automatic translation |
+| Output language | Portuguese (pt-BR) by default; another language if requested |
 | Target browser | Google Chrome / Chrome Canary |
 
 ---
@@ -41,11 +42,11 @@ WebAI Multimodal was created to validate a browser-local AI flow, focusing on in
 
 Main application flow:
 
-1. The user writes a prompt and can optionally attach an image or audio file.
+1. The user writes a prompt (or captures audio via microphone) and can optionally attach an image or audio file.
 2. The app sends the content to Chrome's native language model.
-3. The response is displayed in streaming mode, updating the UI progressively.
-4. After generation completes, the English response is translated into Portuguese.
-5. The user can tune parameters (Temperature and Top K) to control response behavior.
+3. The response is displayed in streaming mode with Markdown formatting, updating the UI progressively.
+4. After generation completes, the response is automatically translated to Portuguese when needed.
+5. The user can tune parameters (Temperature and Top K) and select the response mode.
 
 > This project is focused on Software Engineering study with applied AI and exploration of experimental Web Platform APIs.
 
@@ -55,20 +56,35 @@ Main application flow:
 
 ### 1) Multimodal interaction
 - Accepts text prompts.
-- Allows optional image or audio attachments for extra context.
+- Allows optional image or audio file attachments for extra context.
+- Live audio capture via the computer's connected microphone.
 
-### 2) Streaming responses
+### 2) Streaming responses with Markdown
 - Displays output while the model is still generating.
+- Automatically renders headings, lists, tables, code blocks and other Markdown elements.
 - Improves perceived responsiveness of the interface.
 
-### 3) Model parameter controls
+### 3) Response modes
+- **Clear and Objective**: concise and direct response, ideal for quick questions.
+- **In-depth Research**: detailed and descriptive analysis with multiple perspectives, examples and technical details.
+
+### 4) Microphone input
+- Microphone button next to the submit button.
+- Records audio in real time; automatically sends to the AI when stopped.
+- Response includes a **reorganized transcription** of the audio (with speech imperfection corrections) followed by the answer to the identified request.
+
+### 5) Model parameter controls
 - Temperature: controls creativity and variability of responses.
 - Top K: controls the candidate token set per generation step.
 
-### 4) Automatic translation
-- Detects language and translates English to Portuguese when needed.
+### 6) Configurable output language
+- Responds in **Portuguese (pt-BR) by default**.
+- Prioritizes another language if the user explicitly requests it in the message.
 
-### 5) Local-first interface
+### 7) Automatic translation
+- Detects language and translates to Portuguese when needed.
+
+### 8) Local-first interface
 - Simple structure for quick local testing.
 - Layered architecture (controller, services, view) to support maintainability.
 
@@ -121,8 +137,9 @@ http://localhost:8080
 
 ### 6) Test the full flow
 - Adjust Temperature and Top K.
-- Enter a prompt (with or without attachment).
-- Submit and watch the streaming output.
+- Select the response mode (Clear and Objective or In-depth Research).
+- Enter a prompt (with or without attachment) and submit — or click the microphone button for live audio capture.
+- Watch the streaming output with Markdown formatting.
 - Verify the final Portuguese translation.
 
 ---

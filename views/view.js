@@ -1,3 +1,9 @@
+import { marked } from 'https://cdn.jsdelivr.net/npm/marked@9/lib/marked.esm.js';
+import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.es.mjs';
+
+// Configura o marked para gerar HTML limpo com quebras de linha automáticas
+marked.use({ breaks: true, gfm: true });
+
 /**
  * View
  * Abstrai toda a manipulação do DOM, expondo métodos semânticos
@@ -22,6 +28,8 @@ export class View {
             filePreview:       document.getElementById('file-preview'),
             fileUploadBtn:     document.getElementById('file-upload-btn'),
             fileSelectedName:  document.getElementById('file-selected-name'),
+            responseModeInputs: document.querySelectorAll('input[name="response-mode"]'),
+            micButton:         document.getElementById('mic-button'),
         };
     }
 
@@ -70,6 +78,15 @@ export class View {
         return this.elements.questionInput.value;
     }
 
+    /**
+     * Define o texto do campo de pergunta.
+     * Usado pela transcrição de voz para exibir o texto reconhecido.
+     * @param {string} text
+     */
+    setQuestionText(text) {
+        this.elements.questionInput.value = text;
+    }
+
     /** @returns {number} Valor atual do slider de temperatura. */
     getTemperature() {
         return parseFloat(this.elements.temperature.value);
@@ -85,11 +102,25 @@ export class View {
         return this.elements.fileInput.files[0];
     }
 
+    /** @returns {'objective' | 'research'} Modo de resposta selecionado pelo usuário. */
+    getResponseMode() {
+        for (const input of this.elements.responseModeInputs) {
+            if (input.checked) return input.value;
+        }
+        return 'objective';
+    }
+
     // ── Área de resposta ──────────────────────────────────────────────────────
 
-    /** Substitui o conteúdo da área de resposta pelo texto fornecido. */
+    /**
+     * Substitui o conteúdo da área de resposta pelo texto fornecido,
+     * renderizando-o como Markdown formatado.
+     * O HTML gerado é sanitizado com DOMPurify para prevenir XSS.
+     * @param {string} text
+     */
     setOutput(text) {
-        this.elements.output.textContent = text;
+        const rawHtml = marked.parse(text);
+        this.elements.output.innerHTML = DOMPurify.sanitize(rawHtml);
     }
 
     /**
@@ -209,8 +240,31 @@ export class View {
         this.elements.fileUploadBtn.addEventListener('click', callback);
     }
 
-    /** @param {(e: SubmitEvent) => void} callback */
+    /** @param {(e: Event) => void} callback */
     onFormSubmit(callback) {
         this.elements.form.addEventListener('submit', callback);
+    }
+
+    /** @param {() => void} callback */
+    onMicButtonClick(callback) {
+        this.elements.micButton?.addEventListener('click', callback);
+    }
+
+    /** Muda o botão de microfone para o modo "gravando" (pulsação vermelha). */
+    setMicButtonToRecordingMode() {
+        this.elements.micButton?.classList.add('recording');
+        if (this.elements.micButton) {
+            this.elements.micButton.setAttribute('aria-label', 'Parar gravação');
+            this.elements.micButton.title = 'Parar gravação';
+        }
+    }
+
+    /** Retorna o botão de microfone ao estado ocioso. */
+    setMicButtonToIdleMode() {
+        this.elements.micButton?.classList.remove('recording');
+        if (this.elements.micButton) {
+            this.elements.micButton.setAttribute('aria-label', 'Capturar áudio do microfone');
+            this.elements.micButton.title = 'Capturar áudio';
+        }
     }
 }
