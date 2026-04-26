@@ -29,8 +29,9 @@ Aplicacao web de estudo em IA aplicada, com suporte multimodal (texto, imagem e 
 | Item | Descricao |
 | --- | --- |
 | Objetivo | Demonstrar IA no navegador sem backend dedicado |
-| Entrada | Texto, imagem e audio |
-| Saida | Resposta em streaming + traducao para portugues |
+| Entrada | Texto, imagem, audio (arquivo) e microfone (captura ao vivo) |
+| Saida | Resposta em streaming com formatacao Markdown + traducao automatica |
+| Idioma de saida | Portugues (pt-BR) por padrao; outro idioma se solicitado |
 | Navegador alvo | Google Chrome / Chrome Canary |
 
 ---
@@ -41,11 +42,11 @@ O WebAI Multimodal foi criado para validar um fluxo de IA executado localmente n
 
 Fluxo principal da aplicacao:
 
-1. O usuario escreve uma pergunta e, se quiser, anexa uma imagem ou audio.
+1. O usuario escreve uma pergunta (ou captura audio pelo microfone) e, se quiser, anexa uma imagem ou arquivo de audio.
 2. O sistema envia o conteudo para o modelo nativo de linguagem do Chrome.
-3. A resposta e exibida em streaming, atualizando a interface progressivamente.
-4. Ao final da geracao, o texto em ingles e traduzido para portugues.
-5. O usuario pode ajustar parametros (Temperature e Top K) para controlar o comportamento da resposta.
+3. A resposta e exibida em streaming com formatacao Markdown, atualizando a interface progressivamente.
+4. Ao final da geracao, o texto e traduzido para portugues automaticamente, quando necessario.
+5. O usuario pode ajustar parametros (Temperature e Top K) e selecionar o modo de resposta.
 
 > Projeto voltado para estudo de Engenharia de Software com IA aplicada e exploracao de APIs experimentais da Web Platform.
 
@@ -55,20 +56,35 @@ Fluxo principal da aplicacao:
 
 ### 1) Interacao multimodal
 - Aceita pergunta em texto.
-- Permite anexar imagem ou audio para contexto adicional.
+- Permite anexar imagem ou arquivo de audio para contexto adicional.
+- Captura de audio ao vivo pelo microfone conectado ao computador.
 
-### 2) Resposta em streaming
+### 2) Resposta em streaming com Markdown
 - Exibe a resposta enquanto ela esta sendo gerada.
+- Formata automaticamente cabecalhos, listas, tabelas, blocos de codigo e outros elementos Markdown.
 - Melhora a percepcao de desempenho da interface.
 
-### 3) Controle de parametros do modelo
+### 3) Modos de resposta
+- **Claro e Objetivo**: resposta direta e concisa, ideal para perguntas rapidas.
+- **Pesquisa Aprofundada**: analise detalhada e descritiva com multiplas perspectivas, exemplos e detalhes tecnicos.
+
+### 4) Entrada por microfone
+- Botao de microfone ao lado do botao de envio.
+- Grava o audio em tempo real; ao parar, envia automaticamente para a IA.
+- A resposta inclui uma **transcricao reorganizada** do audio (com correcao de imprecisoes de fala) seguida da resposta ao conteudo identificado.
+
+### 5) Controle de parametros do modelo
 - Temperature: controla criatividade/variacao das respostas.
 - Top K: controla o conjunto de tokens candidatos por etapa.
 
-### 4) Traducao automatica
-- Detecta idioma e traduz de ingles para portugues quando necessario.
+### 6) Idioma de saida configuravel
+- Responde em **Portugues (pt-BR) por padrao**.
+- Prioriza outro idioma se o usuario solicitar explicitamente na mensagem.
 
-### 5) Interface focada em uso local
+### 7) Traducao automatica
+- Detecta idioma e traduz para portugues quando necessario.
+
+### 8) Interface focada em uso local
 - Estrutura simples para testes rapidos.
 - Separacao por camadas (controller, services, view) para facilitar manutencao.
 
@@ -121,8 +137,9 @@ http://localhost:8080
 
 ### 6) Testar o fluxo
 - Ajustar Temperature e Top K.
-- Digitar pergunta (com ou sem anexo).
-- Enviar e acompanhar a resposta em streaming.
+- Selecionar o modo de resposta (Claro e Objetivo ou Pesquisa Aprofundada).
+- Digitar pergunta (com ou sem anexo) e enviar — ou clicar no botao de microfone para captura de audio ao vivo.
+- Acompanhar a resposta em streaming com formatacao Markdown.
 - Verificar traducao final para portugues.
 
 ---

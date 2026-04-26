@@ -16,6 +16,11 @@ export class FormController {
 
         // Controle do estado de geração (evita submissões concorrentes)
         this.isGenerating = false;
+
+        // Estado da gravação de microfone
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
     }
 
     /**
@@ -55,6 +60,109 @@ export class FormController {
 
             await this.handleSubmit();
         });
+        // Botão de microfone — alterna entre gravar e parar gravação
+        this.view.onMicButtonClick(async () => {
+            if (this.isGenerating) return; // bloqueia durante geração de texto
+
+            if (this.isRecording) {
+                this.stopMicRecording();
+            } else {
+                await this.startMicRecording();
+            }
+        });    }
+
+    /**
+     * Inicia a captura de áudio pelo microfone via MediaRecorder.
+     * Ao parar, monta o blob e chama handleMicSubmit.
+     */
+    async startMicRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            this.audioChunks = [];
+            this.mediaRecorder = new MediaRecorder(stream);
+
+            this.mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) this.audioChunks.push(e.data);
+            };
+
+            this.mediaRecorder.onstop = async () => {
+                // Libera o microfone imediatamente após parar
+                stream.getTracks().forEach(track => track.stop());
+
+                const audioBlob = new Blob(this.audioChunks, { type: this.mediaRecorder.mimeType || 'audio/webm' });
+                await this.handleMicSubmit(audioBlob);
+            };
+
+            this.mediaRecorder.start();
+            this.isRecording = true;
+            this.view.setMicButtonToRecordingMode();
+        } catch (error) {
+            console.error('Erro ao acessar microfone:', error);
+            if (error.name === 'NotAllowedError') {
+                this.view.setOutput('Permissão de microfone negada. Habilite o acesso ao microfone nas configurações do navegador.');
+            } else if (error.name === 'NotFoundError') {
+                this.view.setOutput('Nenhum microfone encontrado neste dispositivo.');
+            } else {
+                this.view.setOutput(`Erro ao iniciar gravação: ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * Para a gravação em andamento.
+     * O processamento ocorre no callback `onstop` do MediaRecorder.
+     */
+    stopMicRecording() {
+        if (this.mediaRecorder && this.isRecording) {
+            this.mediaRecorder.stop();
+            this.isRecording = false;
+            this.view.setMicButtonToIdleMode();
+        }
+    }
+
+    /**
+     * Envia o blob de áudio do microfone para a IA e exibe a resposta.
+     * @param {Blob} audioBlob
+     */
+    async handleMicSubmit(audioBlob) {
+        const temperature = this.view.getTemperature();
+        const topK = this.view.getTopK();
+        const responseMode = this.view.getResponseMode();
+
+        console.log('Enviando áudio do microfone:', { size: audioBlob.size, type: audioBlob.type });
+
+        this.toggleButton(true);
+        this.view.setOutput('Processando áudio...');
+
+        try {
+            const aiResponseChunks = await this.aiService.createMicSession(
+                audioBlob,
+                temperature,
+                topK,
+                responseMode
+            );
+
+            this.view.setOutput('');
+            let fullResponse = '';
+
+            for await (const chunk of aiResponseChunks) {
+                if (this.aiService.isAborted()) break;
+                fullResponse += chunk;
+                this.view.setOutput(fullResponse);
+            }
+
+            if (fullResponse && !this.aiService.isAborted()) {
+                this.view.setOutput('Traduzindo resposta...');
+                const translatedResponse = await this.translationService.translateToPortuguese(fullResponse);
+                this.view.setOutput(translatedResponse);
+            }
+        } catch (error) {
+            console.error('Erro durante processamento de áudio:', error);
+            this.view.setOutput(`Erro: ${error.message}`);
+        }
+
+        this.toggleButton(false);
     }
 
     /**
@@ -72,8 +180,9 @@ export class FormController {
         const temperature = this.view.getTemperature();
         const topK = this.view.getTopK();
         const file = this.view.getFile();
+        const responseMode = this.view.getResponseMode();
 
-        console.log('Parâmetros utilizados:', { temperature, topK });
+        console.log('Parâmetros utilizados:', { temperature, topK, responseMode });
 
         // Habilita o modo "Parar" e exibe mensagem de processamento
         this.toggleButton(true);
@@ -85,7 +194,8 @@ export class FormController {
                 question,
                 temperature,
                 topK,
-                file
+                file,
+                responseMode
             );
 
             this.view.setOutput('');

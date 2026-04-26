@@ -91,6 +91,33 @@
                         Sua Mensagem
                     </h2>
 
+                    <!-- Seletor de modo de resposta -->
+                    <div class="response-mode-group" role="group" aria-labelledby="mode-label">
+                        <span class="mode-label" id="mode-label">Modo de Resposta</span>
+                        <div class="mode-toggle">
+                            <label class="mode-option">
+                                <input type="radio" name="response-mode" id="mode-objective" value="objective" checked>
+                                <span class="mode-option-content">
+                                    <span class="mode-icon">🎯</span>
+                                    <span class="mode-text">
+                                        <strong>Claro e Objetivo</strong>
+                                        <small>Resposta direta e concisa</small>
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="response-mode" id="mode-research" value="research">
+                                <span class="mode-option-content">
+                                    <span class="mode-icon">🔬</span>
+                                    <span class="mode-text">
+                                        <strong>Pesquisa Aprofundada</strong>
+                                        <small>Análise detalhada e descritiva</small>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
                     <label for="question" class="sr-only">Digite sua pergunta</label>
                     <textarea
                         id="question"
@@ -100,10 +127,16 @@
                         aria-required="true"
                     ></textarea>
 
-                    <button type="submit" id="ask-button" class="btn btn-primary">
-                        <span class="btn-icon">✨</span>
-                        <span class="btn-label">Enviar pergunta</span>
-                    </button>
+                    <div class="submit-group">
+                        <button type="submit" id="ask-button" class="btn btn-primary">
+                            <span class="btn-icon">✨</span>
+                            <span class="btn-label">Enviar pergunta</span>
+                        </button>
+                        <button type="button" id="mic-button" class="btn btn-mic"
+                            aria-label="Capturar áudio do microfone" title="Capturar áudio">
+                            <span class="mic-icon" aria-hidden="true">🎙️</span>
+                        </button>
+                    </div>
                 </section>
 
             </form>
